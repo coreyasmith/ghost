@@ -39,6 +39,29 @@ var MarkdownIt = require('markdown-it'),
                     return self.renderToken.apply(self, arguments);
                 }
             };
+        })
+        .use(function lineNumbers(md) {
+            var originalFence = md.renderer.rules.fence;
+
+            md.renderer.rules.fence = function (tokens, idx) {
+                var token = tokens[idx],
+                    info = token.info,
+                    lineNumbersPattern = /line-numbers/i;
+
+                if (!info || !info.match(lineNumbersPattern)) {
+                    return originalFence.apply(this, arguments);
+                }
+
+                token.info = info.replace(lineNumbersPattern, '');
+                var classIndex = token.attrIndex('class');
+                if (classIndex < 0) {
+                    token.attrPush(['class', 'line-numbers']);
+                } else {
+                    token.attrs[classIndex][1] = 'line-numbers';
+                }
+
+                return originalFence.apply(this, arguments);
+            };
         });
 
 // configure linkify-it
